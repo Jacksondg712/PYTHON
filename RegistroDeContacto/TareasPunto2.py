@@ -64,7 +64,7 @@ class SistemaGestionTareas:
         except FileNotFoundError:
             print("Archivo no encontrado. No se cargaron tareas.")
 
-if _name_ == "_main_":
+if __name__ == "_main_":
     sistema = SistemaGestionTareas()
     sistema.cargar_tareas("tareas.json")
 
@@ -99,4 +99,4 @@ if _name_ == "_main_":
             print("Tareas guardadas. ¡Adiós!")
             break
         else:
-            print("Opción no válida. Intenta de nuevo.")
+            print("Opción no válida. Intenta de nuevo...")
