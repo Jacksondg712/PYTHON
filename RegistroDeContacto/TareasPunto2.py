@@ -2,101 +2,158 @@ import json
 from datetime import datetime
 
 class Tarea:
-    def _init_(self, titulo, descripcion, fecha_vencimiento):
+    def __init__(self, titulo, descripcion, fecha_vencimiento, completada=False):
         self.titulo = titulo
         self.descripcion = descripcion
         self.fecha_vencimiento = datetime.strptime(fecha_vencimiento, "%Y-%m-%d")
-        self.completada = False
-
-    def marcar_completada(self):
-        self.completada = True
+        self.completada = completada
 
     def to_dict(self):
         return {
             "titulo": self.titulo,
             "descripcion": self.descripcion,
             "fecha_vencimiento": self.fecha_vencimiento.strftime("%Y-%m-%d"),
-            "completada": self.completada
+            "completada": self.completada,
         }
 
     @staticmethod
     def from_dict(data):
-        tarea = Tarea(data["titulo"], data["descripcion"], data["fecha_vencimiento"])
-        tarea.completada = data["completada"]
-        return tarea
+        return Tarea(
+            data["titulo"],
+            data["descripcion"],
+            data["fecha_vencimiento"],
+            data["completada"],
+        )
 
-class SistemaGestionTareas:
-    def _init_(self):
+
+class GestorTareas:
+    def __init__(self):
         self.tareas = []
 
     def agregar_tarea(self, titulo, descripcion, fecha_vencimiento):
-        self.tareas.append(Tarea(titulo, descripcion, fecha_vencimiento))
+        tarea = Tarea(titulo, descripcion, fecha_vencimiento)
+        self.tareas.append(tarea)
+        print("Tarea agregada con éxito.")
 
     def mostrar_tareas(self):
-        tareas_ordenadas = sorted(self.tareas, key=lambda x: x.fecha_vencimiento)
-        for idx, tarea in enumerate(tareas_ordenadas, start=1):
+        if not self.tareas:
+            print("No hay tareas registradas.")
+            return
+
+        tareas_ordenadas = sorted(self.tareas, key=lambda tarea: tarea.fecha_vencimiento)
+        for tarea in tareas_ordenadas:
             estado = "Completada" if tarea.completada else "Pendiente"
-            print(f"{idx}. {tarea.titulo} - {tarea.descripcion} - {tarea.fecha_vencimiento.strftime('%Y-%m-%d')} - {estado}")
+            print(f"Título: {tarea.titulo}")
+            print(f"Descripción: {tarea.descripcion}")
+            print(f"Fecha de vencimiento: {tarea.fecha_vencimiento.strftime('%Y-%m-%d')}")
+            print(f"Estado: {estado}")
+            print("-" * 20)
 
-    def marcar_tarea_completada(self, indice):
-        if 0 <= indice < len(self.tareas):
-            self.tareas[indice].marcar_completada()
+    def marcar_completada(self, titulo):
+        for tarea in self.tareas:
+            if tarea.titulo == titulo:
+                tarea.completada = True
+                print("Tarea marcada como completada.")
+                return
+        print("Tarea no encontrada.")
 
-    def eliminar_tarea(self, indice):
-        if 0 <= indice < len(self.tareas):
-            del self.tareas[indice]
+    def eliminar_tarea(self, titulo):
+        for tarea in self.tareas:
+            if tarea.titulo == titulo:
+                self.tareas.remove(tarea)
+                print("Tarea eliminada con éxito.")
+                return
+        print("Tarea no encontrada.")
 
-    def buscar_tareas(self, termino):
-        resultados = [tarea for tarea in self.tareas if termino in tarea.titulo or termino in tarea.descripcion]
-        for tarea in resultados:
-            estado = "Completada" if tarea.completada else "Pendiente"
-            print(f"{tarea.titulo} - {tarea.descripcion} - {tarea.fecha_vencimiento.strftime('%Y-%m-%d')} - {estado}")
+    def buscar_tarea(self, termino):
+        resultados = [
+            tarea
+            for tarea in self.tareas
+            if termino.lower() in tarea.titulo.lower() or termino.lower() in tarea.descripcion.lower()
+        ]
+        if not resultados:
+            print("No se encontraron tareas.")
+        else:
+            for tarea in resultados:
+                estado = "Completada" if tarea.completada else "Pendiente"
+                print(f"Título: {tarea.titulo}")
+                print(f"Descripción: {tarea.descripcion}")
+                print(f"Fecha de vencimiento: {tarea.fecha_vencimiento.strftime('%Y-%m-%d')}")
+                print(f"Estado: {estado}")
+                print("-" * 20)
 
     def guardar_tareas(self, archivo):
         with open(archivo, "w") as f:
             json.dump([tarea.to_dict() for tarea in self.tareas], f)
+        print("Tareas guardadas con éxito.")
 
     def cargar_tareas(self, archivo):
         try:
             with open(archivo, "r") as f:
                 datos = json.load(f)
-                self.tareas = [Tarea.from_dict(tarea) for tarea in datos]
+                self.tareas = [Tarea.from_dict(dato) for dato in datos]
+            print("Tareas cargadas con éxito.")
         except FileNotFoundError:
             print("Archivo no encontrado. No se cargaron tareas.")
+        except json.JSONDecodeError:
+            print("El archivo no tiene un formato válido.")
 
-if __name__ == "_main_":
-    sistema = SistemaGestionTareas()
-    sistema.cargar_tareas("tareas.json")
+
+def mostrar_menu():
+    print("\nMenú de Gestión de Tareas")
+    print("1. Agregar tarea")
+    print("2. Mostrar tareas")
+    print("3. Marcar tarea como completada")
+    print("4. Eliminar tarea")
+    print("5. Buscar tareas")
+    print("6. Guardar tareas")
+    print("7. Cargar tareas")
+    print("8. Salir")
+
+
+if __name__ == "__main__":
+    gestor = GestorTareas()
 
     while True:
-        print("\nSistema de Gestión de Tareas")
-        print("1. Agregar tarea")
-        print("2. Mostrar tareas")
-        print("3. Marcar tarea como completada")
-        print("4. Eliminar tarea")
-        print("5. Buscar tareas")
-        print("6. Guardar y salir")
+        mostrar_menu()
         opcion = input("Selecciona una opción: ")
 
         if opcion == "1":
             titulo = input("Título: ")
             descripcion = input("Descripción: ")
             fecha_vencimiento = input("Fecha de vencimiento (YYYY-MM-DD): ")
-            sistema.agregar_tarea(titulo, descripcion, fecha_vencimiento)
+            try:
+                datetime.strptime(fecha_vencimiento, "%Y-%m-%d")
+                gestor.agregar_tarea(titulo, descripcion, fecha_vencimiento)
+            except ValueError:
+                print("Fecha no válida. Usa el formato YYYY-MM-DD.")
+
         elif opcion == "2":
-            sistema.mostrar_tareas()
+            gestor.mostrar_tareas()
+
         elif opcion == "3":
-            indice = int(input("Índice de la tarea a completar: ")) - 1
-            sistema.marcar_tarea_completada(indice)
+            titulo = input("Título de la tarea a completar: ")
+            gestor.marcar_completada(titulo)
+
         elif opcion == "4":
-            indice = int(input("Índice de la tarea a eliminar: ")) - 1
-            sistema.eliminar_tarea(indice)
+            titulo = input("Título de la tarea a eliminar: ")
+            gestor.eliminar_tarea(titulo)
+
         elif opcion == "5":
-            termino = input("Buscar por título o descripción: ")
-            sistema.buscar_tareas(termino)
+            termino = input("Ingrese un término para buscar: ")
+            gestor.buscar_tarea(termino)
+
         elif opcion == "6":
-            sistema.guardar_tareas("tareas.json")
-            print("Tareas guardadas. ¡Adiós!")
+            archivo = input("Nombre del archivo para guardar las tareas (e.g., tareas.json): ")
+            gestor.guardar_tareas(archivo)
+
+        elif opcion == "7":
+            archivo = input("Nombre del archivo para cargar las tareas (e.g., tareas.json): ")
+            gestor.cargar_tareas(archivo)
+
+        elif opcion == "8":
+            print("Saliendo del programa. ¡Hasta luego!")
             break
+
         else:
-            print("Opción no válida. Intenta de nuevo...")
+            print("Opción no válida. Inténtalo de nuevo.")
