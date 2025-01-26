@@ -1,112 +1,109 @@
-# import csv
+import json
+from datetime import datetime
 
-# def menu():
-#     print("\nGestor de Contactos")
-#     print("1. Agregar un contacto")
-#     print("2. Mostrar contactos")
-#     print("3. Buscar un contacto")
-#     print("4. Eliminar un contacto")
-#     print("5. Guardar contactos en archivo CSV")
-#     print("6. Cargar contactos desde archivo CSV")
-#     print("7. Salir")
-#     return input("Seleccione una opción: ")
+class Tarea:
+    def __init__(self, titulo, descripcion, fecha_vencimiento):
+        self.titulo = titulo
+        self.descripcion = descripcion
+        self.fecha_vencimiento = datetime.strptime(fecha_vencimiento, "%Y-%m-%d")
+        self.completada = False
 
-# def validar_datos(contactos, nombre, telefono, correo):
-#     for contacto in contactos:
-#         if contacto["Nombre"].lower() == nombre.lower():
-#             print("Error: El nombre ya está en la lista de contactos.")
-#             return False
-#         if contacto["Teléfono"] == telefono:
-#             print("Error: El teléfono ya está en la lista de contactos.")
-#             return False
-#         if contacto["Correo"].lower() == correo.lower():
-#             print("Error: El correo ya está en la lista de contactos.")
-#             return False
-#     return True
+    def marcar_completada(self):
+        self.completada = True
 
-# def agregar_contacto(contactos):
-#     nombre = input("Nombre: ")
-#     telefono = input("Teléfono: ")
-#     correo = input("Correo electrónico: ")
+    def to_dict(self):
+        return {
+            "titulo": self.titulo,
+            "descripcion": self.descripcion,
+            "fecha_vencimiento": self.fecha_vencimiento.strftime("%Y-%m-%d"),
+            "completada": self.completada
+        }
 
-#     if validar_datos(contactos, nombre, telefono, correo):
-#         contactos.append({"Nombre": nombre, "Teléfono": telefono, "Correo": correo})
-#         print("Contacto agregado con éxito.")
+    @staticmethod
+    def from_dict(data):
+        tarea = Tarea(data["titulo"], data["descripcion"], data["fecha_vencimiento"])
+        tarea.completada = data["completada"]
+        return tarea
 
-# def mostrar_contactos(contactos):
-#     if not contactos:
-#         print("No hay contactos para mostrar.")
-#         return
-#     print("\nLista de contactos:")
-#     print("{:<20} {:<15} {:<25}".format("Nombre", "Teléfono", "Correo"))
-#     print("-" * 60)
-#     for contacto in contactos:
-#         print("{:<20} {:<15} {:<25}".format(contacto["Nombre"], contacto["Teléfono"], contacto["Correo"]))
+class SistemaGestionTareas:
+    def __init__(self):
+        self.tareas = []
 
-# def buscar_contacto(contactos):
-#     criterio = input("Buscar por (nombre/teléfono/correo): ").lower()
-#     valor = input("Ingrese el valor a buscar: ")
-#     resultados = [c for c in contactos if c[criterio.capitalize()] == valor]
-#     if resultados:
-#         print("\nContactos encontrados:")
-#         print("{:<20} {:<15} {:<25}".format("Nombre", "Teléfono", "Correo"))
-#         print("-" * 60)
-#         for contacto in resultados:
-#             print("{:<20} {:<15} {:<25}".format(contacto["Nombre"], contacto["Teléfono"], contacto["Correo"]))
-#     else:
-#         print("No se encontraron contactos que coincidan con el criterio.")
+    def agregar_tarea(self, titulo, descripcion, fecha_vencimiento):
+        self.tareas.append(Tarea(titulo, descripcion, fecha_vencimiento))
 
-# def eliminar_contacto(contactos):
-#     criterio = input("Eliminar por (nombre/teléfono/correo): ").lower()
-#     valor = input("Ingrese el valor a buscar: ")
-#     for contacto in contactos:
-#         if contacto[criterio.capitalize()] == valor:
-#             contactos.remove(contacto)
-#             print("Contacto eliminado con éxito.")
-#             return
-#     print("No se encontró un contacto que coincida con el criterio.")
+    def mostrar_tareas(self):
+        tareas_ordenadas = sorted(self.tareas, key=lambda x: x.fecha_vencimiento)
+        for idx, tarea in enumerate(tareas_ordenadas, start=1):
+            estado = "Completada" if tarea.completada else "Pendiente"
+            print(f"{idx}. {tarea.titulo} - {tarea.descripcion} - {tarea.fecha_vencimiento.strftime('%Y-%m-%d')} - {estado}")
 
-# def guardar_en_csv(contactos, archivo):
-#     with open(archivo, mode="w", newline="", encoding="utf-8") as f:
-#         writer = csv.DictWriter(f, fieldnames=["Nombre", "Teléfono", "Correo"])
-#         writer.writeheader()
-#         writer.writerows(contactos)
-#     print(f"Contactos guardados en {archivo}.")
+    def marcar_tarea_completada(self, indice):
+        if 0 <= indice < len(self.tareas):
+            self.tareas[indice].marcar_completada()
+        else:
+            print("Índice fuera de rango.")
 
-# def cargar_desde_csv(contactos, archivo):
-#     try:
-#         with open(archivo, mode="r", encoding="utf-8") as f:
-#             reader = csv.DictReader(f)
-#             contactos.clear()
-#             contactos.extend(reader)
-#         print(f"Contactos cargados desde {archivo}.")
-#     except FileNotFoundError:
-#         print(f"El archivo {archivo} no existe.")
+    def eliminar_tarea(self, indice):
+        if 0 <= indice < len(self.tareas):
+            del self.tareas[indice]
+        else:
+            print("Índice fuera de rango.")
 
-# def main():
-#     contactos = []
-#     archivo_csv = "contactos.csv"
+    def buscar_tareas(self, termino):
+        resultados = [tarea for tarea in self.tareas if termino.lower() in tarea.titulo.lower() or termino.lower() in tarea.descripcion.lower()]
+        for tarea in resultados:
+            estado = "Completada" if tarea.completada else "Pendiente"
+            print(f"{tarea.titulo} - {tarea.descripcion} - {tarea.fecha_vencimiento.strftime('%Y-%m-%d')} - {estado}")
 
-#     while True:
-#         opcion = menu()
+    def guardar_tareas(self, archivo):
+        with open(archivo, "w") as f:
+            json.dump([tarea.to_dict() for tarea in self.tareas], f)
 
-#         if opcion == "1":
-#             agregar_contacto(contactos)
-#         elif opcion == "2":
-#             mostrar_contactos(contactos)
-#         elif opcion == "3":
-#             buscar_contacto(contactos)
-#         elif opcion == "4":
-#             eliminar_contacto(contactos)
-#         elif opcion == "5":
-#             guardar_en_csv(contactos, archivo_csv)
-#         elif opcion == "6":
-#             cargar_desde_csv(contactos, archivo_csv)
-#         elif opcion == "7":
-#             print("Saliendo del programa. ¡Hasta luego!")
-#             break
-#         else:
-#             print("Opción no válida, intente de nuevo.")
+    def cargar_tareas(self, archivo):
+        try:
+            with open(archivo, "r") as f:
+                datos = json.load(f)
+                if not isinstance(datos, list):
+                    raise ValueError("Formato de archivo incorrecto")
+                self.tareas = [Tarea.from_dict(tarea) for tarea in datos]
+        except (FileNotFoundError, json.JSONDecodeError, ValueError):
+            print("No se pudo cargar el archivo de tareas. Iniciando con una lista vacía.")
+            self.tareas = []
 
-# if __name__ == "__main__":
-#     main()
+if __name__ == "__main__":
+    sistema = SistemaGestionTareas()
+    sistema.cargar_tareas("tareas.json")
+
+    while True:
+        print("\nSistema de Gestión de Tareas")
+        print("1. Agregar tarea")
+        print("2. Mostrar tareas")
+        print("3. Marcar tarea como completada")
+        print("4. Eliminar tarea")
+        print("5. Buscar tareas")
+        print("6. Guardar y salir")
+        opcion = input("Selecciona una opción: ")
+
+        if opcion == "1":
+            titulo = input("Título: ")
+            descripcion = input("Descripción: ")
+            fecha_vencimiento = input("Fecha de vencimiento (YYYY-MM-DD): ")
+            sistema.agregar_tarea(titulo, descripcion, fecha_vencimiento)
+        elif opcion == "2":
+            sistema.mostrar_tareas()
+        elif opcion == "3":
+            indice = int(input("Índice de la tarea a completar: ")) - 1
+            sistema.marcar_tarea_completada(indice)
+        elif opcion == "4":
+            indice = int(input("Índice de la tarea a eliminar: ")) - 1
+            sistema.eliminar_tarea(indice)
+        elif opcion == "5":
+            termino = input("Buscar por título o descripción: ")
+            sistema.buscar_tareas(termino)
+        elif opcion == "6":
+            sistema.guardar_tareas("tareas.json")
+            print("Tareas guardadas. ¡Adiós!")
+            break
+        else:
+            print("Opción no válida. Intenta de nuevo...")
