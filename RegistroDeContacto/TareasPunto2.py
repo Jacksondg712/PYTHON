@@ -1,4 +1,5 @@
-import json
+import csv
+import os
 from datetime import datetime
 
 class Tarea:
@@ -11,28 +12,32 @@ class Tarea:
     def marcar_completada(self):
         self.completada = True
 
-    def to_dict(self):
-        return {
-            "titulo": self.titulo,
-            "descripcion": self.descripcion,
-            "fecha_vencimiento": self.fecha_vencimiento.strftime("%Y-%m-%d"),
-            "completada": self.completada
-        }
+    def to_list(self):
+        return [
+            self.titulo,
+            self.descripcion,
+            self.fecha_vencimiento.strftime("%Y-%m-%d"),
+            self.completada
+        ]
 
     @staticmethod
-    def from_dict(data):
-        tarea = Tarea(data["titulo"], data["descripcion"], data["fecha_vencimiento"])
-        tarea.completada = data["completada"]
+    def from_list(data):
+        tarea = Tarea(data[0], data[1], data[2])
+        tarea.completada = data[3] == 'True'
         return tarea
 
 class SistemaGestionTareas:
     def __init__(self):
         self.tareas = []
+        self.archivo = os.path.join(os.path.dirname(__file__), "tareas.csv")
 
     def agregar_tarea(self, titulo, descripcion, fecha_vencimiento):
         self.tareas.append(Tarea(titulo, descripcion, fecha_vencimiento))
 
     def mostrar_tareas(self):
+        if not self.tareas:
+            print("No hay tareas registradas.")
+            return
         tareas_ordenadas = sorted(self.tareas, key=lambda x: x.fecha_vencimiento)
         for idx, tarea in enumerate(tareas_ordenadas, start=1):
             estado = "Completada" if tarea.completada else "Pendiente"
@@ -52,28 +57,45 @@ class SistemaGestionTareas:
 
     def buscar_tareas(self, termino):
         resultados = [tarea for tarea in self.tareas if termino.lower() in tarea.titulo.lower() or termino.lower() in tarea.descripcion.lower()]
+        if not resultados:
+            print("No se encontraron tareas que coincidan con el término.")
+            return
         for tarea in resultados:
             estado = "Completada" if tarea.completada else "Pendiente"
             print(f"{tarea.titulo} - {tarea.descripcion} - {tarea.fecha_vencimiento.strftime('%Y-%m-%d')} - {estado}")
 
-    def guardar_tareas(self, archivo):
-        with open(archivo, "w") as f:
-            json.dump([tarea.to_dict() for tarea in self.tareas], f)
+    def guardar_tareas(self):
+        with open(self.archivo, mode='w', newline='', encoding='utf-8') as f:
+            writer = csv.writer(f)
+            writer.writerow(["Titulo", "Descripcion", "FechaVencimiento", "Completada"])
+            for tarea in self.tareas:
+                writer.writerow(tarea.to_list())
+        print("Tareas guardadas exitosamente en el archivo.")
 
-    def cargar_tareas(self, archivo):
+    def cargar_tareas(self):
         try:
-            with open(archivo, "r") as f:
-                datos = json.load(f)
-                if not isinstance(datos, list):
-                    raise ValueError("Formato de archivo incorrecto")
-                self.tareas = [Tarea.from_dict(tarea) for tarea in datos]
-        except (FileNotFoundError, json.JSONDecodeError, ValueError):
-            print("No se pudo cargar el archivo de tareas. Iniciando con una lista vacía.")
+            with open(self.archivo, mode='r', newline='', encoding='utf-8') as f:
+                reader = csv.reader(f)
+                next(reader)  
+                self.tareas = [Tarea.from_list(row) for row in reader]
+                print("Tareas cargadas exitosamente.")
+        except FileNotFoundError:
+            print("No se encontró el archivo de tareas. Iniciando con una lista vacía.")
+            self.tareas = []
+        except Exception as e:
+            print(f"Error al cargar el archivo: {e}")
             self.tareas = []
 
 if __name__ == "__main__":
     sistema = SistemaGestionTareas()
-    sistema.cargar_tareas("tareas.json")
+    sistema.cargar_tareas()
+
+    
+    if sistema.tareas:
+        print("\nTareas cargadas desde el archivo:")
+        sistema.mostrar_tareas()
+    else:
+        print("\nNo hay tareas registradas en el archivo inicial.")
 
     while True:
         print("\nSistema de Gestión de Tareas")
@@ -82,7 +104,8 @@ if __name__ == "__main__":
         print("3. Marcar tarea como completada")
         print("4. Eliminar tarea")
         print("5. Buscar tareas")
-        print("6. Guardar y salir")
+        print("6. Guardar tareas")
+        print("7. Salir")
         opcion = input("Selecciona una opción: ")
 
         if opcion == "1":
@@ -102,8 +125,9 @@ if __name__ == "__main__":
             termino = input("Buscar por título o descripción: ")
             sistema.buscar_tareas(termino)
         elif opcion == "6":
-            sistema.guardar_tareas("tareas.json")
-            print("Tareas guardadas. ¡Adiós!")
+            sistema.guardar_tareas()
+        elif opcion == "7":
+            print("¡Adiós!")
             break
         else:
             print("Opción no válida. Intenta de nuevo...")
