@@ -25,7 +25,7 @@ class Tarea:
         tarea = Tarea(data[0], data[1], data[2])
         tarea.completada = data[3] == 'True'
         return tarea
-
+    
 class SistemaGestionTareas:
     def __init__(self):
         self.tareas = []
