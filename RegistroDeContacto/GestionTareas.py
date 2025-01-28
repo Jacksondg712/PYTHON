@@ -99,13 +99,13 @@ if __name__ == "__main__":
 
     while True:
         print("\nSistema de Gestión de Tareas")
-        print("1. Agregar tarea")
-        print("2. Mostrar tareas")
+        print("1. Agregar una tarea")
+        print("2. Mostrar tareas agregadas")
         print("3. Marcar tarea como completada")
-        print("4. Eliminar tarea")
-        print("5. Buscar tareas")
-        print("6. Guardar tareas")
-        print("7. Salir")
+        print("4. Eliminar una tarea")
+        print("5. Buscar una tarea")
+        print("6. Guardar tareas en formato csv")
+        print("7. Salir del programa")
         opcion = input("Selecciona una opción: ")
 
         if opcion == "1":
@@ -127,7 +127,7 @@ if __name__ == "__main__":
         elif opcion == "6":
             sistema.guardar_tareas()
         elif opcion == "7":
-            print("¡Adiós!")
+            print("Saliendo del programa. ¡Hasta luego!")
             break
         else:
             print("Opción no válida. Intenta de nuevo...")
