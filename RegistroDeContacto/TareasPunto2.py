@@ -107,7 +107,7 @@ if __name__ == "__main__":
         print("6. Guardar tareas")
         print("7. Salir")
         opcion = input("Selecciona una opción: ")
-
+        
         if opcion == "1":
             titulo = input("Título: ")
             descripcion = input("Descripción: ")
