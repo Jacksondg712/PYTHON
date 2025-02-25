@@ -1,4 +1,3 @@
-# Importamos las bibliotecas necesarias
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -8,7 +7,6 @@ from sqlalchemy import create_engine
 import pymysql
 
 # Conexión a la base de datos MySQL
-# Reemplaza con tus credenciales
 def conectar_bd():
     conexion = mysql.connector.connect(
         host="localhost",
@@ -23,11 +21,6 @@ def crear_engine():
     engine = create_engine('mysql+pymysql://root:QWERTY0707@localhost/car_data')
     return engine
 
-# 1. Descarga una base de datos desde el servidor Kengle
-# (Ya completado según lo mencionado)
-
-# 2. Identificar y seleccionar una tabla principal para el análisis
-# Usaremos la tabla 'table_car' que ya se mostró en la captura de pantalla
 
 # Importar la tabla a un DataFrame de pandas
 def importar_datos():
@@ -66,7 +59,7 @@ print(stats_numericas)
 
 # 5. Generar gráficos para variables categóricas y numéricas
 def generar_graficos(df, cat_cols, num_cols):
-    # a. Histograma para una variable numérica (Price)
+    # a. Histograma variable numérica (Price)
     plt.figure(figsize=(10, 6))
     sns.histplot(df['Price'], kde=True)
     plt.title('Distribución de Precios de Vehículos')
@@ -75,7 +68,7 @@ def generar_graficos(df, cat_cols, num_cols):
     plt.savefig('histograma_precios.png')
     plt.close()
     
-    # b. Gráfico de barras para una variable categórica (Brand)
+    # b. Gráfico de barras variable categórica (Brand)
     plt.figure(figsize=(12, 6))
     sns.countplot(y='Brand', data=df, order=df['Brand'].value_counts().index)
     plt.title('Frecuencia de Marcas de Vehículos')
@@ -84,7 +77,7 @@ def generar_graficos(df, cat_cols, num_cols):
     plt.savefig('barras_marcas.png')
     plt.close()
     
-    # Gráfico adicional: Relación entre Año y Precio
+    #Relación entre Año y Precio
     plt.figure(figsize=(10, 6))
     sns.scatterplot(x='Year', y='Price', data=df, hue='Fuel_Type')
     plt.title('Relación entre Año y Precio por Tipo de Combustible')
@@ -108,11 +101,7 @@ def limpiar_datos(df):
         for col in numericas:
             if df[col].isnull().sum() > 0:
                 df[col] = df[col].fillna(df[col].median())
-        
-        # # Rellenar categóricas con el modo
-        # for col in categoricas:
-        #     if df[col].isnull().sum() > 0:
-        #         df[col] = df[col].fillna(df[col].mode()[0])
+
     
     # b. Valores duplicados
     duplicados = df.duplicated().sum()
@@ -145,14 +134,6 @@ print("\nEstadísticas descriptivas después de la limpieza:")
 print(stats_post_limpieza)
 
 # 7 y 8. Consulta SQL y importación a DataFrame
-# Esta consulta se debe ejecutar primero en MySQL Shell
-# """
-# -- Consulta SQL para obtener vehículos diésel o eléctricos con precio menor a 10000
-# SELECT * FROM table_car 
-# WHERE (Fuel_Type = 'Diesel' OR Fuel_Type = 'Electric') 
-# AND Price < 10000;
-# """
-
 def consulta_sql_a_dataframe():
     conexion = conectar_bd()
     cursor = conexion.cursor(dictionary=True)
